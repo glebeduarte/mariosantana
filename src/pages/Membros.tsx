@@ -41,6 +41,7 @@ export default function Membros() {
   return (
     <>
       <Cabecalho titulo="Área de membros"
+        acoes={<Link to="/vitrine" className="btn-ouro">Ver vitrine como aluno</Link>}
         frase={`${data.cursos.length} cursos, ${data.aulas.length} aulas, ${data.matriculas.length} matrículas e ${data.alunos.length} alunos. ${semLogin} ainda não criaram acesso no sistema novo.`} />
       <nav aria-label="Seções da área de membros" className="flex gap-6 overflow-x-auto border-b border-linha">
         {([['cursos', 'Cursos'], ['alunos', 'Alunos e acessos'], ['biblioteca', 'Biblioteca'], ['eduzz', 'Integração Eduzz']] as [Aba, string][]).map(([id, nome]) => (

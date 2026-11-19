@@ -10,7 +10,8 @@ function Anel({ pct, tamanho = 56 }: { pct: number; tamanho?: number }) {
   return (
     <svg width={tamanho} height={tamanho} viewBox={`0 0 ${tamanho} ${tamanho}`} role="img" aria-label={`${pct}% da etapa`} className="shrink-0">
       <circle cx={tamanho / 2} cy={tamanho / 2} r={r} fill="none" stroke="#EEECE6" strokeWidth={5} />
-      <circle cx={tamanho / 2} cy={tamanho / 2} r={r} fill="none" stroke="#9A7A30" strokeWidth={5} strokeLinecap="round"
+      <defs><linearGradient id="g-anel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#E8CC8C" /><stop offset="1" stopColor="#9A7A30" /></linearGradient></defs>
+      <circle className="encher" cx={tamanho / 2} cy={tamanho / 2} r={r} fill="none" stroke="url(#g-anel)" strokeWidth={5} strokeLinecap="round"
         strokeDasharray={`${(pct / 100) * c} ${c}`} transform={`rotate(-90 ${tamanho / 2} ${tamanho / 2})`} />
       <text x="50%" y="50%" dominantBaseline="central" textAnchor="middle" fontSize={13} fontWeight={700} fill="#1C1B18">{pct}%</text>
     </svg>
@@ -22,7 +23,8 @@ export default function CartaoMentorado({ r, totalEtapas }: { r: ResumoMentorado
   const ordem = r.etapa?.ordem ?? 1
   return (
     <Link to={`/mentorados/${r.m.id}`} className="cartao cartao-hover group relative flex flex-col overflow-hidden">
-      <span aria-hidden className="absolute inset-x-0 top-0 h-1" style={{ background: n.cor }} />
+      <span aria-hidden className="absolute inset-x-0 top-0 h-1.5" style={{ background: `linear-gradient(90deg, ${n.cor}, ${n.cor}55)` }} />
+      <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-24" style={{ background: `linear-gradient(180deg, ${n.cor}14, transparent)` }} />
       <div className="flex items-start gap-3 p-5 pb-4">
         <Avatar id={r.m.id} nome={r.m.nome} tamanho={46} />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -39,7 +41,7 @@ export default function CartaoMentorado({ r, totalEtapas }: { r: ResumoMentorado
           <b className="text-[15px]">{r.etapa?.nome ?? '-'}</b>
           <div className="flex gap-1" aria-hidden>
             {Array.from({ length: totalEtapas }, (_, i) => (
-              <span key={i} className="h-1.5 flex-1 rounded-full" style={{ background: i + 1 < ordem ? '#9A7A30' : i + 1 === ordem ? '#D8C08A' : '#EEECE6' }} />
+              <span key={i} className="h-1.5 flex-1 rounded-full" style={{ background: i + 1 < ordem ? 'linear-gradient(90deg, #C9A453, #9A7A30)' : i + 1 === ordem ? 'linear-gradient(90deg, #E8CC8C, #D8C08A)' : '#EEECE6' }} />
             ))}
           </div>
         </div>

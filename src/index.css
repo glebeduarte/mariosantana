@@ -4,14 +4,53 @@
 
 body { @apply bg-chao text-tinta font-sans text-sm antialiased; }
 .num { font-variant-numeric: tabular-nums; }
-.btn { @apply inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg font-semibold transition disabled:opacity-50; }
-.btn-primario { @apply btn bg-tinta text-white hover:bg-black; }
-.btn-ouro { @apply btn bg-ouro text-white hover:bg-ouro-escuro; }
-.btn-secundario { @apply btn border border-[#DCDAD3] bg-white hover:bg-bandeja; }
-.campo { @apply h-10 w-full rounded-lg border border-[#DCDAD3] bg-[#FAFAF8] px-3 outline-none transition focus:border-tinta focus:bg-white; }
-.cartao { @apply rounded-2xl border border-linha bg-white; }
-.cartao-hover { @apply transition hover:border-[#CFCBC0] hover:shadow-[0_6px_24px_-12px_rgba(28,27,24,0.18)]; }
+
+/* Botões */
+.btn { @apply inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl font-semibold transition duration-200 disabled:opacity-50 active:scale-[0.98]; }
+.btn-primario { @apply btn text-white shadow-[0_6px_16px_-6px_rgba(28,27,24,0.55)] hover:-translate-y-px hover:shadow-[0_10px_22px_-8px_rgba(28,27,24,0.6)];
+  background: linear-gradient(180deg, #2B2A26 0%, #151411 100%); }
+.btn-ouro { @apply btn text-white shadow-[0_8px_20px_-8px_rgba(154,122,48,0.7)] hover:-translate-y-px;
+  background: linear-gradient(135deg, #C9A453 0%, #9A7A30 55%, #7A5E1E 100%); }
+.btn-secundario { @apply btn border border-[#DCDAD3] bg-white shadow-[0_1px_2px_rgba(28,27,24,0.05)] hover:-translate-y-px hover:border-[#CFCBC0] hover:shadow-[0_6px_14px_-8px_rgba(28,27,24,0.25)]; }
+
+.campo { @apply h-10 w-full rounded-xl border border-[#DCDAD3] bg-[#FAFAF8] px-3 outline-none transition focus:border-ouro focus:bg-white focus:shadow-[0_0_0_4px_rgba(154,122,48,0.12)]; }
+
+/* Superfícies */
+.cartao { @apply rounded-2xl border border-[#E9E6DE] bg-white shadow-[0_1px_2px_rgba(28,27,24,0.04),0_8px_24px_-16px_rgba(28,27,24,0.18)]; }
+.cartao-hover { @apply transition duration-300 hover:-translate-y-1 hover:border-[#DCD6C6] hover:shadow-[0_2px_4px_rgba(28,27,24,0.04),0_22px_40px_-18px_rgba(28,27,24,0.35)]; }
 .rotulo { @apply text-[13px] text-cinza; }
 .titulo-secao { @apply text-[17px] font-bold tracking-[-0.01em]; }
+
+/* Faixa de destaque com gradiente quente */
+.faixa-ouro { background:
+  radial-gradient(120% 140% at 100% 0%, rgba(232,204,140,0.55) 0%, rgba(232,204,140,0) 55%),
+  radial-gradient(90% 120% at 0% 100%, rgba(154,122,48,0.35) 0%, rgba(154,122,48,0) 60%),
+  linear-gradient(135deg, #1F1D18 0%, #2C2820 55%, #3A321F 100%); }
+.faixa-clara { background:
+  radial-gradient(80% 120% at 100% 0%, rgba(232,204,140,0.35) 0%, rgba(232,204,140,0) 60%),
+  linear-gradient(180deg, #FFFFFF 0%, #FBF8F1 100%); }
+.texto-ouro { background: linear-gradient(90deg, #E8CC8C, #C9A453 60%, #E8CC8C); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* Entrada dos blocos */
+@keyframes subir { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes crescer { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes encher { from { stroke-dasharray: 0 999; } }
+@keyframes largura { from { width: 0; } }
+@keyframes brilho { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+.entrar { animation: subir .55s cubic-bezier(.2,.7,.2,1) both; }
+.crescer { transform-origin: bottom; animation: crescer .7s cubic-bezier(.2,.7,.2,1) both; }
+.encher { animation: encher 1.1s cubic-bezier(.2,.7,.2,1) both; }
+.barra-anim { animation: largura .9s cubic-bezier(.2,.7,.2,1) both; }
+.pulso { position: relative; }
+.pulso::after { content: ""; position: absolute; inset: -3px; border-radius: 999px; border: 2px solid currentColor; opacity: 0; animation: pulsar 2s ease-out infinite; }
+@keyframes pulsar { 0% { opacity: .6; transform: scale(.8); } 100% { opacity: 0; transform: scale(1.6); } }
+
+/* Trilho horizontal da vitrine */
+.trilho { scroll-snap-type: x mandatory; scrollbar-width: none; }
+.trilho::-webkit-scrollbar { display: none; }
+.trilho > * { scroll-snap-align: start; }
+
 :focus-visible { outline: 2px solid #9A7A30; outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

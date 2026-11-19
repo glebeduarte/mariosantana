@@ -10,10 +10,12 @@ import Icone from '@/components/Icone'
 import { useTarefas, estaAtrasada } from './Tarefas'
 import type { Lead, Parcela } from '@/lib/tipos'
 
-function Kpi({ rotulo, valor, detalhe, tom, to }: { rotulo: string; valor: string | number; detalhe: string; tom?: 'ruim' | 'alerta'; to: string }) {
+function Kpi({ rotulo, valor, detalhe, tom, to, icone, cor, atraso = 0 }: { rotulo: string; valor: string | number; detalhe: string; tom?: 'ruim' | 'alerta'; to: string; icone: string; cor: string; atraso?: number }) {
   return (
-    <Link to={to} className="flex flex-col gap-1.5 bg-white p-5 transition hover:bg-[#FBFAF7]">
-      <span className="rotulo">{rotulo}</span>
+    <Link to={to} style={{ animationDelay: `${atraso}ms` }} className="cartao cartao-hover entrar relative flex flex-col gap-1.5 overflow-hidden p-5">
+      <span aria-hidden className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full opacity-[0.16] blur-xl" style={{ background: cor }} />
+      <div className="flex items-center justify-between"><span className="rotulo">{rotulo}</span>
+        <span className="grid h-9 w-9 place-items-center rounded-xl text-white shadow-[0_8px_16px_-8px_rgba(0,0,0,0.45)]" style={{ background: `linear-gradient(135deg, ${cor}CC, ${cor})` }}><Icone nome={icone} tamanho={17} /></span></div>
       <span className="num text-[30px] font-semibold leading-none tracking-[-0.02em]">{valor}</span>
       <span className={`text-[13px] ${tom === 'ruim' ? 'font-semibold text-ruim-texto' : tom === 'alerta' ? 'text-alerta-texto' : 'text-cinza'}`}>{detalhe}</span>
     </Link>
@@ -91,23 +93,26 @@ export default function Inicio() {
 
   return (
     <>
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <span className="text-[13px] capitalize text-cinza">{data}</span>
-          <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em]">Visão geral{perfil?.nome ? `, ${perfil.nome.split(' ')[0]}` : ''}</h1>
-          <p className="text-[#4A4943]">Hoje: {frase}.</p>
+      <header className="faixa-ouro entrar relative isolate flex flex-wrap items-end justify-between gap-5 overflow-hidden rounded-3xl p-7 text-white shadow-[0_30px_60px_-34px_rgba(28,27,24,0.8)] sm:p-8">
+        <span aria-hidden className="absolute -right-16 -top-24 -z-10 h-72 w-72 rounded-full border border-[#E8CC8C]/20" />
+        <span aria-hidden className="absolute -right-4 -top-10 -z-10 h-44 w-44 rounded-full border border-[#E8CC8C]/15" />
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[13px] capitalize text-white/60">{data}</span>
+          <h1 className="text-[30px] font-bold leading-tight tracking-[-0.02em]">Visão geral{perfil?.nome ? <>, <span className="texto-ouro">{perfil.nome.split(' ')[0]}</span></> : ''}</h1>
+          <p className="text-white/75">Hoje: {frase}.</p>
         </div>
-        <div className="flex gap-2">
-          <Link to="/mentorados" className="btn-secundario">Mentorados</Link>
-          <Link to="/tarefas" className="btn-primario">Abrir quadro</Link>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/vitrine" className="btn h-10 border border-white/20 bg-white/10 text-white backdrop-blur hover:bg-white/20">Ver vitrine</Link>
+          <Link to="/mentorados" className="btn h-10 border border-white/20 bg-white/10 text-white backdrop-blur hover:bg-white/20">Mentorados</Link>
+          <Link to="/tarefas" className="btn-ouro">Abrir quadro</Link>
         </div>
       </header>
 
-      <section aria-label="Indicadores" className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-linha bg-linha lg:grid-cols-4">
-        <Kpi to="/tarefas" rotulo="Tarefas abertas" valor={abertas.length} detalhe={atrasadas.length ? `${atrasadas.length} atrasada${atrasadas.length > 1 ? 's' : ''}` : 'nenhuma atrasada'} tom={atrasadas.length ? 'ruim' : undefined} />
-        <Kpi to="/mentorados" rotulo="Mentorados ativos" valor={ativos.length} detalhe={emRisco.length ? `${emRisco.length} em risco` : 'nenhum em risco'} tom={emRisco.length ? 'ruim' : undefined} />
-        <Kpi to="/financeiro" rotulo="Parcelas do mês" valor={mesParcelas.length ? `${pagas.length}/${mesParcelas.length}` : '-'} detalhe={mesParcelas.length ? `${dinheiro(pagas.reduce((s, p) => s + (p.valor ?? 0), 0))} recebido` : 'nenhuma cadastrada'} tom={parcelasAtrasadas.length ? 'alerta' : undefined} />
-        <Kpi to="/leads" rotulo="Leads em aberto" valor={extra?.leads.length ?? 0} detalhe={`${extra?.leads.filter(l => l.etapa === 'novo').length ?? 0} novos aguardando contato`} />
+      <section aria-label="Indicadores" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Kpi icone="tarefas" cor="#3B6FB6" atraso={60} to="/tarefas" rotulo="Tarefas abertas" valor={abertas.length} detalhe={atrasadas.length ? `${atrasadas.length} atrasada${atrasadas.length > 1 ? 's' : ''}` : 'nenhuma atrasada'} tom={atrasadas.length ? 'ruim' : undefined} />
+        <Kpi icone="mentorados" cor="#9A7A30" atraso={120} to="/mentorados" rotulo="Mentorados ativos" valor={ativos.length} detalhe={emRisco.length ? `${emRisco.length} em risco` : 'nenhum em risco'} tom={emRisco.length ? 'ruim' : undefined} />
+        <Kpi icone="financeiro" cor="#1D8C84" atraso={180} to="/financeiro" rotulo="Parcelas do mês" valor={mesParcelas.length ? `${pagas.length}/${mesParcelas.length}` : '-'} detalhe={mesParcelas.length ? `${dinheiro(pagas.reduce((s, p) => s + (p.valor ?? 0), 0))} recebido` : 'nenhuma cadastrada'} tom={parcelasAtrasadas.length ? 'alerta' : undefined} />
+        <Kpi icone="leads" cor="#2F8A55" atraso={240} to="/leads" rotulo="Leads em aberto" valor={extra?.leads.length ?? 0} detalhe={`${extra?.leads.filter(l => l.etapa === 'novo').length ?? 0} novos aguardando contato`} />
       </section>
 
       <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
@@ -123,7 +128,8 @@ export default function Inicio() {
               const prox = ab.filter(t => t.prazo).sort((a, b) => (a.prazo! < b.prazo! ? -1 : 1))[0]
               const resp = f.responsavel_id ? mPerfis.get(f.responsavel_id) : undefined
               return (
-                <Link key={f.id} to={`/tarefas?frente=${f.slug}`} className="cartao cartao-hover flex flex-col gap-3 p-4">
+                <Link key={f.id} to={`/tarefas?frente=${f.slug}`} className="cartao cartao-hover relative flex flex-col gap-3 overflow-hidden p-4">
+                  <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-16 opacity-60" style={{ background: `linear-gradient(180deg, ${f.cor}1F, transparent)` }} />
                   <div className="flex items-center gap-2"><EtiquetaFrente nome={f.nome} cor={f.cor} />
                     {resp ? <span className="ml-auto"><Avatar id={resp.id} nome={resp.nome} tamanho={24} /></span> : <span className="ml-auto text-xs text-cinza">sem responsável</span>}</div>
                   <div className="flex items-baseline gap-2">
@@ -131,7 +137,7 @@ export default function Inicio() {
                     {at > 0 && <span className="ml-auto rounded-full bg-ruim-fundo px-2 py-0.5 text-xs font-semibold text-ruim-texto">{at} atrasada{at > 1 ? 's' : ''}</span>}
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <div className="h-1.5 overflow-hidden rounded-full bg-[#EEECE6]"><div className="h-full rounded-full" style={{ width: `${pct}%`, background: f.cor }} /></div>
+                    <div className="h-2 overflow-hidden rounded-full bg-[#EEECE6]"><div className="barra-anim h-full rounded-full" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${f.cor}99, ${f.cor})` }} /></div>
                     <span className="text-xs text-cinza">{feitas} concluída{feitas === 1 ? '' : 's'} no mês · {pct}%</span>
                   </div>
                   <span className="truncate border-t border-[#F0EEE9] pt-2.5 text-[13px]">{prox ? <>{prox.titulo} <span className="text-cinza">· {textoPrazo(prox.prazo)}</span></> : <span className="text-cinza">Sem prazos marcados</span>}</span>
@@ -167,7 +173,7 @@ export default function Inicio() {
                   <div key={e.id} className="flex items-center gap-3">
                     <span className="w-[120px] shrink-0 truncate text-[13px]">{e.nome}</span>
                     <div className="flex h-7 flex-1 items-center gap-[3px]">
-                      {aqui.map(r => <span key={r.m.id} title={r.m.nome} className="h-full rounded-[4px]" style={{ width: `${100 / max}%`, background: NIVEL[r.nivel].cor }} />)}
+                      {aqui.map(r => <span key={r.m.id} title={r.m.nome} className="crescer h-full rounded-[5px] shadow-[inset_0_-6px_10px_-6px_rgba(0,0,0,0.25)]" style={{ width: `${100 / max}%`, background: `linear-gradient(180deg, ${NIVEL[r.nivel].cor}BB, ${NIVEL[r.nivel].cor})` }} />)}
                     </div>
                     <span className="num w-5 text-right font-semibold">{aqui.length}</span>
                   </div>
@@ -190,7 +196,7 @@ export default function Inicio() {
               <div className="relative flex h-[130px] items-end gap-2">
                 {porSemana.map((v, i) => (
                   <div key={i} className="flex flex-1 flex-col items-center justify-end" title={`${v} concluídas`}>
-                    <span className="w-full rounded-t-[3px]" style={{ height: `${(v / topoY) * 130}px`, background: i === 7 ? '#9A7A30' : '#D8D5CC' }} />
+                    <span className="crescer w-full rounded-t-[5px]" style={{ animationDelay: `${i * 50}ms`, height: `${(v / topoY) * 130}px`, background: i === 7 ? 'linear-gradient(180deg, #E8CC8C, #9A7A30)' : 'linear-gradient(180deg, #E4E1D8, #CFCBC0)' }} />
                   </div>
                 ))}
               </div>

@@ -93,7 +93,7 @@ export default function Mentorados() {
 
       {lista.length === 0 ? <Vazio>Nenhum mentorado neste filtro.</Vazio> : vista === 'cartoes' ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
-          {lista.map(r => <CartaoMentorado key={r.m.id} r={r} totalEtapas={totalEtapas} />)}
+          {lista.map((r, i) => <div key={r.m.id} className="entrar" style={{ animationDelay: `${i * 60}ms` }}><CartaoMentorado r={r} totalEtapas={totalEtapas} /></div>)}
         </div>
       ) : vista === 'etapas' ? (
         <div className="overflow-x-auto pb-2">

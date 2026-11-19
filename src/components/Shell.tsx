@@ -22,6 +22,7 @@ const GRUPOS: { nome: string; itens: Item[] }[] = [
   { nome: 'Mentoria', itens: [
     { to: '/mentorados', nome: 'Mentorados', icone: 'mentorados' },
     { to: '/membros', nome: 'Área de membros', icone: 'membros' },
+    { to: '/vitrine', nome: 'Ver vitrine do aluno', icone: 'grade' },
   ] },
   { nome: 'Comercial', itens: [
     { to: '/leads', nome: 'Leads', icone: 'leads', conta: 'leads' },
@@ -66,7 +67,7 @@ export default function Shell() {
   const menu = (
     <nav aria-label="Menu principal" className="flex h-full flex-col gap-6 px-3 py-5">
       <Link to="/" onClick={fechar} className="flex items-center gap-3 px-2">
-        <span aria-hidden className="grid h-10 w-10 place-items-center rounded-xl bg-tinta font-marca text-[15px] text-[#E8CC8C]">MS</span>
+        <span aria-hidden className="faixa-ouro grid h-10 w-10 place-items-center rounded-xl font-marca text-[15px] text-[#E8CC8C] shadow-[0_8px_18px_-8px_rgba(122,94,30,0.8)]">MS</span>
         <span className="flex flex-col leading-tight"><b className="text-[15px]">Mário Santana</b><span className="text-xs text-cinza">Painel do negócio</span></span>
       </Link>
 
@@ -77,7 +78,7 @@ export default function Shell() {
             const n = it.conta && c ? c[it.conta] : 0
             return (
               <NavLink key={it.to} to={it.to} end={it.fim} onClick={fechar}
-                className={({ isActive }) => `group flex items-center gap-3 rounded-xl px-3 py-2 transition ${isActive ? 'bg-white font-semibold text-tinta shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-[#4A4943] hover:bg-[#E9E7E1]'}`}>
+                className={({ isActive }) => `group relative flex items-center gap-3 rounded-xl px-3 py-2 transition duration-200 ${isActive ? 'bg-white font-semibold text-tinta shadow-[0_6px_18px_-10px_rgba(28,27,24,0.35)] before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-[#E8CC8C] before:to-[#9A7A30]' : 'text-[#4A4943] hover:translate-x-0.5 hover:bg-[#E9E7E1]'}`}>
                 {({ isActive }) => (<>
                   <Icone nome={it.icone} className={isActive ? 'text-ouro-escuro' : 'text-[#8A887F] group-hover:text-tinta'} />
                   <span className="flex-1">{it.nome}</span>
@@ -123,7 +124,7 @@ export default function Shell() {
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col lg:py-2 lg:pr-2">
-        <div className="flex min-h-full flex-1 flex-col bg-white lg:rounded-[18px] lg:border lg:border-linha">
+        <div className="flex min-h-full flex-1 flex-col bg-white lg:rounded-[20px] lg:border lg:border-[#E9E6DE] lg:shadow-[0_20px_50px_-30px_rgba(28,27,24,0.35)]">
           <div className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-linha bg-white/95 px-4 backdrop-blur lg:rounded-t-[18px] lg:px-8">
             <button className="grid h-9 w-9 place-items-center rounded-lg hover:bg-bandeja lg:hidden" onClick={() => setAberto(true)} aria-label="Abrir menu"><Icone nome="menu" /></button>
             <span className="text-[13px] text-cinza">Método Mário Santana</span>
@@ -133,7 +134,7 @@ export default function Shell() {
               <Link to="/tarefas" className="btn-primario h-9 px-3 text-[13px]"><Icone nome="mais" tamanho={16} /><span className="hidden sm:inline">Nova tarefa</span></Link>
             </div>
           </div>
-          <main className="flex min-w-0 flex-1 flex-col gap-7 p-4 sm:p-6 lg:px-8 lg:py-7">
+          <main key={loc.pathname} className="entrar flex min-w-0 flex-1 flex-col gap-7 p-4 sm:p-6 lg:px-8 lg:py-7">
             <Outlet />
           </main>
         </div>

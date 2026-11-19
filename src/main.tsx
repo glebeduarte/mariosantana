@@ -17,6 +17,7 @@ import Membros from './pages/Membros'
 import CursoEditor from './pages/CursoEditor'
 import Equipe from './pages/Equipe'
 import AreaAluno from './pages/AreaAluno'
+import VitrinePrevia from './pages/VitrinePrevia'
 import { Carregando } from './components/ui'
 
 const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false, retry: 1 } } })
@@ -37,6 +38,7 @@ function Portao() {
   )
   return (
     <Routes>
+      <Route path="vitrine/*" element={<VitrinePrevia />} />
       <Route element={<Shell />}>
         <Route index element={<Inicio />} />
         <Route path="tarefas" element={<Tarefas />} />
