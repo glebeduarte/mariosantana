@@ -232,6 +232,7 @@ function Biblioteca() {
 }
 
 function Eduzz() {
+  const qc = useQueryClient()
   const { data } = useQuery({
     queryKey: ['eduzz'],
     queryFn: async () => {
@@ -241,7 +242,7 @@ function Eduzz() {
         supabase.from('eventos_venda').select('id,produto_externo_id,email,nome,acao,status,erro,criado_em').order('criado_em', { ascending: false }).limit(30),
         supabase.from('integracao_vendas').select('token').maybeSingle(),
       ])
-      return { regras: (r.data ?? []) as { id: string; produto_externo_id: string; rotulo: string; todos_cursos: boolean; ativa: boolean }[],
+      return { regras: (r.data ?? []) as { id: string; produto_externo_id: string; rotulo: string; todos_cursos: boolean; ativa: boolean; plano_mentoria: string | null }[],
         acessos: (a.data ?? []) as { id: string; regra_id: string; email_comprador: string; nome_comprador: string; status: string; concedido_em: string }[],
         eventos: (e.data ?? []) as { id: string; produto_externo_id: string | null; email: string | null; nome: string | null; acao: string | null; status: string; erro: string | null; criado_em: string }[],
         token: i.data?.token as string | undefined }
@@ -261,6 +262,11 @@ function Eduzz() {
         {data.regras.map(r => (
           <div key={r.id} className="flex items-center gap-3 border-t border-[#F0EEE9] py-2.5">
             <div className="flex flex-1 flex-col"><b>{r.rotulo}</b><span className="num text-xs text-cinza">Produto {r.produto_externo_id} · {r.todos_cursos ? 'libera todos os cursos' : 'cursos escolhidos'}</span></div>
+            <label className="sr-only" htmlFor={`pl-${r.id}`}>Entrada na jornada</label>
+            <select id={`pl-${r.id}`} className="h-8 rounded-md border border-linha bg-bandeja px-1 text-xs" value={r.plano_mentoria ?? ''}
+              onChange={async e => { await supabase.from('regras_produto').update({ plano_mentoria: e.target.value || null }).eq('id', r.id); qc.invalidateQueries({ queryKey: ['eduzz'] }) }}>
+              <option value="">Só cursos</option><option value="anual">Cursos + jornada anual</option><option value="semestral">Cursos + jornada semestral</option>
+            </select>
             {r.ativa ? <Pilula tom="bom">Ativa</Pilula> : <Pilula>Desligada</Pilula>}
           </div>
         ))}
