@@ -98,14 +98,14 @@ function CartaoCurso({ c, base, i, continuar }: { c: ItemVitrine; base: string; 
   const destino = `${base}/curso/${c.curso.id}${continuar && c.proxima ? `/aula/${c.proxima.id}` : ''}`
   return (
     <Link to={destino} style={{ animationDelay: `${i * 60}ms` }}
-      className="entrar group relative aspect-video w-[78vw] shrink-0 overflow-hidden rounded-xl bg-[#1A1814] ring-1 ring-white/5 transition duration-300 hover:z-10 hover:scale-[1.04] hover:ring-2 hover:ring-[#C9A453]/70 hover:shadow-[0_30px_60px_-20px_rgba(0,0,0,0.9),0_0_40px_-10px_rgba(201,164,83,0.35)] sm:w-[380px] lg:w-[420px]">
-      <Imagem url={c.curso.capa_url} titulo={c.curso.titulo} className="transition duration-700 group-hover:scale-[1.06]" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+      className="entrar group relative aspect-[2/3] w-[46vw] shrink-0 overflow-hidden rounded-xl bg-[#1A1814] ring-1 ring-white/5 transition duration-300 hover:z-10 hover:scale-[1.04] hover:ring-2 hover:ring-[#C9A453]/70 hover:shadow-[0_30px_60px_-20px_rgba(0,0,0,0.9),0_0_40px_-10px_rgba(201,164,83,0.35)] sm:w-[220px] lg:w-[250px]">
+      <Imagem url={c.curso.capa_url} titulo={c.curso.titulo} className="object-[50%_25%] transition duration-700 group-hover:scale-[1.06]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/25 to-transparent" />
       {c.pct === 100 && <span className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-[#E8CC8C] to-[#C9A453] px-2.5 py-0.5 text-xs font-bold text-[#1F1D18]">Concluído</span>}
       <span aria-hidden className="absolute left-1/2 top-1/2 grid h-14 w-14 -translate-x-1/2 -translate-y-1/2 scale-75 place-items-center rounded-full bg-gradient-to-br from-[#E8CC8C] to-[#9A7A30] pl-1 text-xl text-[#1F1D18] opacity-0 shadow-[0_10px_30px_rgba(0,0,0,0.6)] transition duration-300 group-hover:scale-100 group-hover:opacity-100">▶</span>
       <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 p-4">
-        <b className="line-clamp-1 text-[16px] text-white drop-shadow">{c.curso.titulo}</b>
-        <span className="line-clamp-1 text-[12px] text-white/65">{continuar && c.proxima ? `Próxima: ${c.proxima.titulo}` : `${c.total} aulas${c.modulos ? ` · ${c.modulos} módulos` : ''}`}</span>
+        <b className="line-clamp-2 text-[17px] leading-snug text-white drop-shadow">{c.curso.titulo}</b>
+        <span className="line-clamp-2 text-[12px] text-white/65">{continuar && c.proxima ? `Próxima: ${c.proxima.titulo}` : `${c.total} aulas${c.modulos ? ` · ${c.modulos} módulos` : ''}`}</span>
         {c.total > 0 && <div className="mt-1 h-[3px] overflow-hidden rounded-full bg-white/20"><div className="barra-anim h-full rounded-full bg-gradient-to-r from-[#E8CC8C] to-[#C9A453]" style={{ width: `${c.pct}%` }} /></div>}
       </div>
     </Link>
@@ -170,7 +170,7 @@ export default function Vitrine({ alunoId, base, nome }: { alunoId: string | und
       {bloqueados.length > 0 && (
         <Fileira titulo="Disponível para adquirir" info={`${bloqueados.length} conteúdos`}>
           {bloqueados.map(c => (
-            <div key={c.curso.id} className="group relative aspect-video w-[78vw] shrink-0 overflow-hidden rounded-xl ring-1 ring-white/5 sm:w-[380px] lg:w-[420px]">
+            <div key={c.curso.id} className="group relative aspect-[2/3] w-[46vw] shrink-0 overflow-hidden rounded-xl ring-1 ring-white/5 sm:w-[220px] lg:w-[250px]">
               <Imagem url={c.curso.capa_url} titulo={c.curso.titulo} className="brightness-[0.45] grayscale-[50%] transition duration-700 group-hover:scale-[1.05] group-hover:brightness-[0.6]" />
               <div className="absolute inset-0 flex flex-col items-start justify-end gap-2 bg-gradient-to-t from-black/90 to-transparent p-4">
                 <span className="rounded-full border border-[#E8CC8C]/40 bg-black/50 px-2.5 py-0.5 text-[11px] font-semibold text-[#E8CC8C]">Bloqueado</span>
