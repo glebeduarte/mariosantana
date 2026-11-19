@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { @apply bg-chao text-tinta font-sans text-sm antialiased; }
+.num { font-variant-numeric: tabular-nums; }
+.btn { @apply inline-flex items-center justify-center h-10 px-4 rounded-lg font-semibold transition disabled:opacity-50; }
+.btn-primario { @apply btn bg-tinta text-white hover:bg-black; }
+.btn-secundario { @apply btn border border-[#DCDAD3] bg-white hover:bg-bandeja; }
+.campo { @apply h-10 w-full rounded-lg border border-[#DCDAD3] bg-[#FAFAF8] px-3 outline-none focus:border-tinta; }
+.cartao { @apply rounded-xl border border-linha bg-white; }
+.rotulo { @apply text-[13px] text-cinza; }
+:focus-visible { outline: 2px solid #9A7A30; outline-offset: 2px; }
