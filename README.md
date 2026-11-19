@@ -14,4 +14,6 @@ npm run dev
 Variáveis opcionais em `.env.local` (ver `.env.example`). Sem elas, o app usa a URL e a chave publicável do projeto.
 
 ## Banco
-As migrações ficam em `supabase/migrations`. O primeiro usuário que criar conta vira admin; os demais papéis são liberados por um admin.
+As migrações ficam em `supabase/migrations`. O e-mail do responsável pela implantação vira admin ao criar conta. Os demais papéis de gestão são liberados em "Equipe e acessos". Alunos e mentorados migrados são reconhecidos pelo e-mail ao criar acesso.
+
+A cópia dos dados da plataforma anterior foi feita direto no banco e não fica no repositório (contém dados pessoais).

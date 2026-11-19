@@ -102,7 +102,7 @@ export default function Inicio() {
         </Painel>
 
         <Painel titulo="Saúde da mentoria" direita={<Link to="/mentorados" className="text-[13px] text-ouro-escuro">Mentorados</Link>}>
-          {(extra?.mentorados.length ?? 0) === 0 ? <Vazio>Os mentorados aparecem aqui depois da migração da base atual.</Vazio> : (
+          {(extra?.mentorados.length ?? 0) === 0 ? <Vazio>Nenhum mentorado ativo.</Vazio> : (
             <div className="flex flex-col gap-1"><span className="num text-[30px] font-semibold">{extra!.mentorados.length}</span><span className="text-cinza">mentorados ativos</span></div>
           )}
         </Painel>
@@ -112,7 +112,7 @@ export default function Inicio() {
         <Link to="/leads" className="flex flex-col gap-1 p-4"><span className="rotulo">Leads em aberto</span><span className="num text-2xl font-semibold">{extra?.leads.length ?? 0}</span><span className="text-xs text-cinza">{extra?.leads.filter(l => l.etapa === 'novo').length ?? 0} novos</span></Link>
         <Link to="/financeiro" className="flex flex-col gap-1 border-l border-linha p-4"><span className="rotulo">Parcelas do mês</span><span className="num text-2xl font-semibold">{pagas} de {mesParcelas.length} pagas</span><span className={`text-xs ${parcelasAtrasadas ? 'text-ruim-texto' : 'text-cinza'}`}>{parcelasAtrasadas} atrasada{parcelasAtrasadas === 1 ? '' : 's'}</span></Link>
         <Link to="/tarefas" className="flex flex-col gap-1 border-t border-linha p-4 lg:border-l lg:border-t-0"><span className="rotulo">Concluídas no mês</span><span className="num text-2xl font-semibold">{todas.filter(t => t.concluida_em && t.concluida_em >= inicioMes).length}</span><span className="text-xs text-cinza">todas as frentes</span></Link>
-        <Link to="/membros" className="flex flex-col gap-1 border-l border-t border-linha p-4 lg:border-t-0"><span className="rotulo">Área de membros</span><span className="text-2xl font-semibold">Em migração</span><span className="text-xs text-cinza">5 cursos, 45 aulas, 60 matrículas</span></Link>
+        <Link to="/membros" className="flex flex-col gap-1 border-l border-t border-linha p-4 lg:border-t-0"><span className="rotulo">Área de membros</span><span className="text-2xl font-semibold">Cursos e alunos</span><span className="text-xs text-cinza">6 cursos, 70 aulas, 66 matrículas migradas</span></Link>
       </section>
     </>
   )

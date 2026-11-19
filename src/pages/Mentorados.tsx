@@ -73,7 +73,7 @@ export default function Mentorados() {
   return (
     <>
       <Cabecalho titulo="Mentorados"
-        frase={ms.length === 0 ? 'Nenhum mentorado ativo ainda. Os 8 atuais entram com a migração da base.' : `${ms.length} ativos na mentoria anual.${risco.length ? ` ${risco.map(m => m.nome).join(', ')} em risco.` : ''}`}
+        frase={ms.length === 0 ? 'Nenhum mentorado ativo.' : `${ms.length} ativos na mentoria anual.${risco.length ? ` ${risco.map(m => m.nome).join(', ')} em risco.` : ''}`}
         acoes={<button className="btn-primario" onClick={() => setNovo(v => !v)}>Novo mentorado</button>} />
 
       {novo && (

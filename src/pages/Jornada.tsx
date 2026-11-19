@@ -12,6 +12,7 @@ const TIPO: Record<string, { nome: string; cls: string }> = {
   workbook: { nome: 'Workbook', cls: 'bg-ouro-claro text-ouro-escuro' },
   sessao: { nome: 'Sessão', cls: 'bg-bom-fundo text-bom-texto' },
   tarefa: { nome: 'Tarefa', cls: 'bg-[#EEECE6] text-[#4A4943]' },
+  marco: { nome: 'Marco', cls: 'bg-[#F8E3EC] text-[#8A2A57]' },
 }
 
 export default function Jornada() {
@@ -130,7 +131,7 @@ export default function Jornada() {
               <label key={i.id} className="flex cursor-pointer items-center gap-2.5 border-t border-[#F0EEE9] py-2.5">
                 <input type="checkbox" id={`it-${i.id}`} checked={data.prog.has(i.id)} onChange={() => alternarItem(i.id)} className="h-4 w-4 accent-[#2F8A55]" />
                 <span className={`flex-1 ${data.prog.has(i.id) ? 'text-cinza line-through' : ''}`}>{i.titulo}</span>
-                <span className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${TIPO[i.tipo].cls}`}>{TIPO[i.tipo].nome}</span>
+                <span className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-semibold ${(TIPO[i.tipo] ?? TIPO.tarefa).cls}`}>{(TIPO[i.tipo] ?? TIPO.tarefa).nome}</span>
               </label>
             ))}
         </Painel>
@@ -187,7 +188,7 @@ export default function Jornada() {
           <Painel titulo="Sessões">
             {data.sessoes.map(s => (
               <div key={s.id} className="flex items-center justify-between gap-2 border-t border-[#F0EEE9] py-2">
-                <span className="font-semibold">{s.titulo}</span>
+                <span className="font-semibold">{s.link_reuniao ? <a href={s.link_reuniao} target="_blank" rel="noreferrer" className="text-ouro-escuro">{s.titulo}</a> : s.titulo}</span>
                 {s.data ? <span className="text-xs text-cinza">{new Date(s.data).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</span> : <Pilula tom="alerta">sem data</Pilula>}
               </div>
             ))}

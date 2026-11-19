@@ -17,6 +17,7 @@ const GRUPOS = [
   ] },
   { nome: 'Mentoria', itens: [{ to: '/mentorados', nome: 'Mentorados' }] },
   { nome: 'Área de membros', itens: [{ to: '/membros', nome: 'Cursos e alunos' }] },
+  { nome: 'Administração', itens: [{ to: '/equipe', nome: 'Equipe e acessos' }] },
   { nome: 'Comercial', itens: [
     { to: '/leads', nome: 'Leads', conta: 'leads' as const },
     { to: '/financeiro', nome: 'Financeiro', conta: 'parcelas' as const },
