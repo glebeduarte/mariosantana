@@ -235,12 +235,16 @@ function Eduzz() {
   const { data } = useQuery({
     queryKey: ['eduzz'],
     queryFn: async () => {
-      const [r, a] = await Promise.all([
+      const [r, a, e, i] = await Promise.all([
         supabase.from('regras_produto').select('*').order('rotulo'),
         supabase.from('acessos_externos').select('*').order('concedido_em', { ascending: false }),
+        supabase.from('eventos_venda').select('id,produto_externo_id,email,nome,acao,status,erro,criado_em').order('criado_em', { ascending: false }).limit(30),
+        supabase.from('integracao_vendas').select('token').maybeSingle(),
       ])
       return { regras: (r.data ?? []) as { id: string; produto_externo_id: string; rotulo: string; todos_cursos: boolean; ativa: boolean }[],
-        acessos: (a.data ?? []) as { id: string; regra_id: string; email_comprador: string; nome_comprador: string; status: string; concedido_em: string }[] }
+        acessos: (a.data ?? []) as { id: string; regra_id: string; email_comprador: string; nome_comprador: string; status: string; concedido_em: string }[],
+        eventos: (e.data ?? []) as { id: string; produto_externo_id: string | null; email: string | null; nome: string | null; acao: string | null; status: string; erro: string | null; criado_em: string }[],
+        token: i.data?.token as string | undefined }
     },
   })
   if (!data) return <Carregando />
@@ -268,7 +272,25 @@ function Eduzz() {
             <div className="flex flex-1 flex-col"><b>{p.nome}</b><span className="text-xs text-cinza">{p.regra} · {p.cursos} cursos · {dataCurta(p.quando)}</span></div>
           </div>
         ))}
-        <p className="pt-3 text-[13px] text-cinza">O recebimento automático das vendas da Eduzz (webhook) passa para este sistema na virada. Até lá, a Lovable continua recebendo as compras.</p>
+      </section>
+      <section className="cartao flex flex-col gap-2 p-4 xl:col-span-2">
+        <h2 className="text-base font-bold">Webhook de vendas</h2>
+        {data.token ? <>
+          <p className="text-[13px] text-cinza">Na virada, cole este endereço no webhook da Eduzz no lugar do endereço da Lovable. Ele já está funcionando.</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <code className="min-w-0 flex-1 truncate rounded-lg bg-bandeja px-3 py-2 text-[12px]">{`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webhook-vendas?token=••••${data.token.slice(-4)}`}</code>
+            <button className="btn-secundario" onClick={() => navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webhook-vendas?token=${data.token}`)}>Copiar endereço</button>
+          </div>
+        </> : <p className="text-[13px] text-cinza">Só administradores veem o endereço do webhook.</p>}
+        <h3 className="pt-2 text-sm font-bold">Últimos eventos recebidos</h3>
+        {data.eventos.length === 0 ? <Vazio>Nenhuma venda recebida por este sistema ainda.</Vazio> : data.eventos.map(ev => (
+          <div key={ev.id} className="flex flex-wrap items-center gap-3 border-t border-[#F0EEE9] py-2 text-[13px]">
+            <b className="min-w-[160px]">{ev.nome ?? ev.email ?? 'Sem comprador'}</b>
+            <span className="text-cinza">Produto {ev.produto_externo_id ?? '-'} · {ev.acao}</span>
+            {ev.erro && <span className="text-cinza">{ev.erro}</span>}
+            <span className="ml-auto flex items-center gap-2"><Pilula tom={ev.status === 'processado' ? 'bom' : ev.status === 'erro' ? 'ruim' : 'neutro'}>{ev.status}</Pilula><span className="text-cinza">{dataCurta(ev.criado_em)}</span></span>
+          </div>
+        ))}
       </section>
     </div>
   )
