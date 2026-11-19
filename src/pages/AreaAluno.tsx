@@ -10,27 +10,36 @@ import { Barra, Carregando, Vazio } from '@/components/ui'
 export default function AreaAluno() {
   const { perfil, papeis, sair } = useAuth()
   const eMentorado = papeis.includes('mentorado')
+  const link = ({ isActive }: { isActive: boolean }) => `transition ${isActive ? 'font-semibold text-white' : 'text-white/60 hover:text-white'}`
   return (
-    <div className="min-h-screen bg-[#FAF8F3]">
-      <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 border-b border-[#E4DED2] bg-white/85 px-5 py-4 backdrop-blur lg:px-10">
-        <Link to="/" className="font-marca text-xl">Método Mário Santana</Link>
-        <nav aria-label="Área do aluno" className="flex flex-wrap gap-5">
-          {eMentorado && <NavLink to="/" end className={({ isActive }) => isActive ? 'font-semibold' : 'text-ouro-escuro'}>Minha jornada</NavLink>}
-          <NavLink to={eMentorado ? '/cursos' : '/'} end className={({ isActive }) => isActive ? 'font-semibold' : 'text-ouro-escuro'}>Cursos</NavLink>
-          <NavLink to="/biblioteca" className={({ isActive }) => isActive ? 'font-semibold' : 'text-ouro-escuro'}>Biblioteca</NavLink>
+    <div className="min-h-screen bg-[#0E0D0B] text-[#F3EEE3]">
+      <header className="sticky top-0 z-40 flex h-[72px] items-center justify-between gap-4 bg-gradient-to-b from-[#0E0D0B] via-[#0E0D0B]/85 to-transparent px-5 lg:px-12">
+        <Link to="/" className="font-marca text-[22px] font-semibold text-white">Método <span className="texto-ouro">Mário Santana</span></Link>
+        <nav aria-label="Área de membros" className="flex items-center gap-6 text-[14px]">
+          <NavLink to={eMentorado ? '/cursos' : '/'} end className={link}>Cursos</NavLink>
+          {eMentorado && <NavLink to="/" end className={link}>Minha jornada</NavLink>}
+          <span className="hidden items-center gap-2 text-white/70 sm:flex"><span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-[#E8CC8C] to-[#9A7A30] text-xs font-bold text-[#1F1D18]">{(perfil?.nome ?? '?').slice(0, 2).toUpperCase()}</span></span>
+          <button className="text-white/60 hover:text-white" onClick={sair}>Sair</button>
         </nav>
-        <div className="flex items-center gap-3"><span className="text-[13px] text-cinza">{perfil?.nome}</span><button className="text-[13px] text-cinza hover:text-tinta" onClick={sair}>Sair</button></div>
       </header>
-      <main className="mx-auto flex max-w-[1240px] flex-col gap-8 px-5 py-8 text-[15px] lg:px-10">
+      <main>
         <Routes>
-          <Route index element={eMentorado ? <Jornada /> : <MeusCursos />} />
+          <Route index element={eMentorado ? <Painel><Jornada /></Painel> : <MeusCursos />} />
           <Route path="cursos" element={<MeusCursos />} />
           <Route path="curso/:id" element={<CursoAluno />} />
           <Route path="curso/:id/aula/:aulaId" element={<CursoAluno />} />
-          <Route path="biblioteca" element={<BibliotecaAluno />} />
-          <Route path="*" element={eMentorado ? <Jornada /> : <MeusCursos />} />
+          <Route path="*" element={eMentorado ? <Painel><Jornada /></Painel> : <MeusCursos />} />
         </Routes>
       </main>
+    </div>
+  )
+}
+
+/** Moldura clara para a jornada sobre o fundo escuro da área de membros. */
+function Painel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="px-5 pb-16 pt-4 lg:px-12">
+      <div className="entrar mx-auto flex max-w-[1240px] flex-col gap-8 rounded-3xl bg-[#FAF8F3] p-6 text-[15px] text-tinta shadow-[0_40px_80px_-40px_rgba(0,0,0,0.9)] ring-1 ring-[#C9A453]/30 sm:p-10">{children}</div>
     </div>
   )
 }
@@ -120,28 +129,5 @@ function Jornada() {
         </aside>
       </div>
     </>
-  )
-}
-
-function BibliotecaAluno() {
-  const { data } = useQuery({
-    queryKey: ['biblioteca-aluno'],
-    queryFn: async () => (await supabase.from('biblioteca').select('*').eq('publicado', true).order('ordem')).data as { id: string; titulo: string; autor: string | null; descricao: string | null; capa_url: string | null; download_url: string | null }[],
-  })
-  if (!data) return <Carregando />
-  return (
-    <section className="flex flex-col gap-4">
-      <h1 className="font-marca text-[34px] font-semibold">Biblioteca</h1>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {data.map(l => (
-          <div key={l.id} className="flex flex-col gap-2">
-            {l.capa_url ? <img src={l.capa_url} alt="" className="aspect-[2/3] w-full rounded-lg object-cover" /> : <div className="aspect-[2/3] rounded-lg bg-[#F2EDE1]" />}
-            <b className="leading-snug">{l.titulo}</b>
-            {l.autor && <span className="text-[13px] text-cinza">{l.autor}</span>}
-            {l.download_url && <a href={l.download_url} target="_blank" rel="noreferrer" className="text-[13px] text-ouro-escuro">Ver resumo</a>}
-          </div>
-        ))}
-      </div>
-    </section>
   )
 }
