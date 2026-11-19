@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth'
 import type { Aluno, Curso, Matricula } from '@/lib/membros'
 import { dataCurta } from '@/lib/util'
 import { Barra, Cabecalho, Carregando, Erro, Pilula, Vazio } from '@/components/ui'
@@ -31,8 +32,29 @@ function useBase() {
   })
 }
 
+/** Traz para o Supabase novo os arquivos que ainda estão no armazenamento do Lovable. */
+function CopiarArquivos({ pendentes }: { pendentes: number }) {
+  const qc = useQueryClient()
+  const [estado, setEstado] = useState<string | null>(null)
+  if (!pendentes && !estado) return null
+  async function rodar() {
+    setEstado('Copiando, pode levar um minuto...')
+    const { data, error } = await supabase.functions.invoke('copiar-arquivos')
+    if (error) { setEstado(`Não foi possível copiar: ${error.message}`); return }
+    setEstado(`${data.arquivos} arquivos copiados, ${data.linhas} registros atualizados${data.falhas?.length ? `, ${data.falhas.length} falharam` : ''}.`)
+    qc.invalidateQueries()
+  }
+  return (
+    <div className="cartao flex flex-wrap items-center gap-3 border-l-4 border-l-[#C9A453] p-4">
+      <span className="text-[14px]">{estado ?? `${pendentes} capas e materiais ainda estão guardados no Lovable. Copie antes de desligar o sistema antigo.`}</span>
+      {!estado?.includes('copiados') && <button className="btn-ouro ml-auto" onClick={rodar} disabled={estado?.startsWith('Copiando')}>Copiar arquivos agora</button>}
+    </div>
+  )
+}
+
 export default function Membros() {
   const [aba, setAba] = useState<Aba>('cursos')
+  const { papeis } = useAuth()
   const { data, isLoading, error } = useBase()
   if (isLoading) return <Carregando />
   if (error || !data) return <Erro erro={error} />
@@ -43,6 +65,7 @@ export default function Membros() {
       <Cabecalho titulo="Área de membros"
         acoes={<Link to="/vitrine" className="btn-ouro">Ver vitrine como aluno</Link>}
         frase={`${data.cursos.length} cursos, ${data.aulas.length} aulas, ${data.matriculas.length} matrículas e ${data.alunos.length} alunos. ${semLogin} ainda não criaram acesso no sistema novo.`} />
+      {papeis.includes('admin') && <CopiarArquivos pendentes={JSON.stringify([data.cursos, data.aulas]).split('yycqayijtvpqckndjnju').length - 1} />}
       <nav aria-label="Seções da área de membros" className="flex gap-6 overflow-x-auto border-b border-linha">
         {([['cursos', 'Cursos'], ['alunos', 'Alunos e acessos'], ['biblioteca', 'Biblioteca'], ['eduzz', 'Integração Eduzz']] as [Aba, string][]).map(([id, nome]) => (
           <button key={id} onClick={() => setAba(id)} className={`h-10 whitespace-nowrap border-b-2 ${aba === id ? 'border-tinta font-bold' : 'border-transparent text-cinza'}`}>{nome}</button>
