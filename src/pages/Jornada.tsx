@@ -47,7 +47,7 @@ export default function Jornada() {
       }
     },
   })
-  const recarregar = () => { qc.invalidateQueries({ queryKey: ['jornada', id] }); qc.invalidateQueries({ queryKey: ['mentorados-painel'] }) }
+  const recarregar = () => { qc.invalidateQueries({ queryKey: ['jornada', id] }); qc.invalidateQueries({ queryKey: ['mentoria-resumo'] }) }
 
   if (isLoading || !etapas) return <Carregando />
   if (error || !data) return <Erro erro={error} />

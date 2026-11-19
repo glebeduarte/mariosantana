@@ -47,7 +47,7 @@ export function Cabecalho({ titulo, frase, acoes }: { titulo: string; frase?: Re
   return (
     <header className="flex flex-wrap items-start justify-between gap-4">
       <div className="flex min-w-0 flex-col gap-1.5">
-        <h1 className="text-[26px] font-bold leading-tight">{titulo}</h1>
+        <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em]">{titulo}</h1>
         {frase && <p className="text-[#4A4943]">{frase}</p>}
       </div>
       {acoes && <div className="flex flex-wrap items-center gap-2">{acoes}</div>}
@@ -56,7 +56,7 @@ export function Cabecalho({ titulo, frase, acoes }: { titulo: string; frase?: Re
 }
 
 export function Vazio({ children }: { children: ReactNode }) {
-  return <div className="rounded-lg border border-dashed border-linha px-4 py-6 text-center text-cinza">{children}</div>
+  return <div className="rounded-xl border border-dashed border-[#DCDAD3] bg-[#FBFAF7] px-4 py-7 text-center text-cinza">{children}</div>
 }
 
 export function Carregando() {
@@ -69,7 +69,7 @@ export function Erro({ erro }: { erro: unknown }) {
 
 export function Painel({ titulo, direita, children, className = '' }: { titulo: string; direita?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={`cartao flex flex-col p-4 ${className}`}>
+    <section className={`cartao flex flex-col p-5 ${className}`}>
       <div className="flex items-baseline justify-between gap-2 pb-2">
         <h2 className="text-base font-bold">{titulo}</h2>
         {direita}

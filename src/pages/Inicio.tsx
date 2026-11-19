@@ -3,29 +3,52 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { useFrentes, usePerfis, mapaPor } from '@/lib/dados'
-import { diasAte, hojeISO, textoPrazo } from '@/lib/util'
-import { Avatar, Barra, Cabecalho, Carregando, EtiquetaFrente, Painel, Ponto, Vazio } from '@/components/ui'
+import { useMentoria, NIVEL } from '@/lib/mentoria'
+import { dataCurta, diasAte, dinheiro, hojeISO, textoPrazo } from '@/lib/util'
+import { Avatar, Carregando, EtiquetaFrente, Ponto, Vazio } from '@/components/ui'
+import Icone from '@/components/Icone'
 import { useTarefas, estaAtrasada } from './Tarefas'
-import type { Mentorado, Parcela, Lead } from '@/lib/tipos'
+import type { Lead, Parcela } from '@/lib/tipos'
+
+function Kpi({ rotulo, valor, detalhe, tom, to }: { rotulo: string; valor: string | number; detalhe: string; tom?: 'ruim' | 'alerta'; to: string }) {
+  return (
+    <Link to={to} className="flex flex-col gap-1.5 bg-white p-5 transition hover:bg-[#FBFAF7]">
+      <span className="rotulo">{rotulo}</span>
+      <span className="num text-[30px] font-semibold leading-none tracking-[-0.02em]">{valor}</span>
+      <span className={`text-[13px] ${tom === 'ruim' ? 'font-semibold text-ruim-texto' : tom === 'alerta' ? 'text-alerta-texto' : 'text-cinza'}`}>{detalhe}</span>
+    </Link>
+  )
+}
+
+function Painel({ titulo, acao, children, className = '' }: { titulo: string; acao?: React.ReactNode; children: React.ReactNode; className?: string }) {
+  return (
+    <section className={`cartao flex flex-col p-5 ${className}`}>
+      <div className="flex items-baseline justify-between gap-2 pb-3"><h2 className="titulo-secao">{titulo}</h2>{acao}</div>
+      {children}
+    </section>
+  )
+}
+
+/** Início da semana (segunda) de uma data. */
+function semana(d: Date) { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x }
 
 export default function Inicio() {
   const { perfil } = useAuth()
   const { data: tarefas, isLoading } = useTarefas()
   const { data: frentes } = useFrentes()
   const { data: perfis } = usePerfis()
+  const { data: mentoria } = useMentoria()
   const mPerfis = mapaPor(perfis)
   const mFrentes = mapaPor(frentes)
 
   const { data: extra } = useQuery({
     queryKey: ['inicio-extra'],
     queryFn: async () => {
-      const ini = hojeISO().slice(0, 8) + '01'
-      const [m, p, l] = await Promise.all([
-        supabase.from('mentorados').select('*').eq('status', 'ativo'),
-        supabase.from('parcelas').select('*').gte('vencimento', ini).neq('status', 'cancelada'),
+      const [p, l] = await Promise.all([
+        supabase.from('parcelas').select('*').neq('status', 'cancelada'),
         supabase.from('leads').select('*').not('etapa', 'in', '(fechado,perdido)'),
       ])
-      return { mentorados: (m.data ?? []) as Mentorado[], parcelas: (p.data ?? []) as Parcela[], leads: (l.data ?? []) as Lead[] }
+      return { parcelas: (p.data ?? []) as Parcela[], leads: (l.data ?? []) as Lead[] }
     },
   })
 
@@ -33,87 +56,167 @@ export default function Inicio() {
   const todas = tarefas ?? []
   const abertas = todas.filter(t => t.status !== 'concluida')
   const atrasadas = abertas.filter(estaAtrasada)
-  const inicioMes = hojeISO().slice(0, 8) + '01'
-  const foco = abertas
-    .filter(t => t.prazo && diasAte(t.prazo) <= 0)
-    .sort((a, b) => (a.prazo! < b.prazo! ? -1 : 1))
-    .slice(0, 6)
+  const hoje = hojeISO()
+  const inicioMes = hoje.slice(0, 8) + '01'
+  const ativos = (mentoria?.resumos ?? []).filter(r => r.m.status === 'ativo')
+  const emRisco = ativos.filter(r => r.nivel === 'risco')
+  const mesParcelas = (extra?.parcelas ?? []).filter(p => p.vencimento.slice(0, 7) === hoje.slice(0, 7))
+  const pagas = mesParcelas.filter(p => p.status === 'paga')
+  const parcelasAtrasadas = (extra?.parcelas ?? []).filter(p => p.status === 'pendente' && diasAte(p.vencimento) < 0)
+  const nomeM = new Map(ativos.map(r => [r.m.id, r.m.nome]))
 
-  const mesParcelas = (extra?.parcelas ?? []).filter(p => p.vencimento.slice(0, 7) === hojeISO().slice(0, 7))
-  const pagas = mesParcelas.filter(p => p.status === 'paga').length
-  const parcelasAtrasadas = (extra?.parcelas ?? []).filter(p => p.status === 'pendente' && diasAte(p.vencimento) < 0).length
-  const frenteMaisAtrasada = frentes?.map(f => ({ f, n: atrasadas.filter(t => t.frente_id === f.id).length })).sort((a, b) => b.n - a.n)[0]
+  // Concluídas por semana: últimas 8 semanas, a atual no ouro
+  const s0 = semana(new Date())
+  const semanas = Array.from({ length: 8 }, (_, i) => { const d = new Date(s0); d.setDate(d.getDate() - (7 * (7 - i))); return d })
+  const porSemana = semanas.map(d => {
+    const fim = new Date(d); fim.setDate(fim.getDate() + 7)
+    return todas.filter(t => t.concluida_em && new Date(t.concluida_em) >= d && new Date(t.concluida_em) < fim).length
+  })
+  const maxSem = Math.max(4, ...porSemana)
+  const passoY = Math.ceil(maxSem / 4)
+  const topoY = passoY * 4
 
-  const frase = atrasadas.length === 0
-    ? 'Nenhuma tarefa atrasada.'
-    : `${atrasadas.length} tarefa${atrasadas.length > 1 ? 's' : ''} atrasada${atrasadas.length > 1 ? 's' : ''}${frenteMaisAtrasada && frenteMaisAtrasada.n ? `, ${frenteMaisAtrasada.n} na frente ${frenteMaisAtrasada.f.nome}` : ''}.`
+  // Atenção: atrasadas, mentorados em risco, parcelas atrasadas
+  const atencao = [
+    ...atrasadas.sort((a, b) => (a.prazo! < b.prazo! ? -1 : 1)).slice(0, 4).map(t => ({ id: t.id, to: '/tarefas', cor: (t.frente_id && mFrentes.get(t.frente_id)?.cor) || '#C9C6BD', titulo: t.titulo, sub: `Tarefa · ${textoPrazo(t.prazo)}` })),
+    ...emRisco.slice(0, 3).map(r => ({ id: r.m.id, to: `/mentorados/${r.m.id}`, cor: NIVEL.risco.cor, titulo: r.m.nome, sub: `Mentorado · ${r.motivos[0]}` })),
+    ...parcelasAtrasadas.slice(0, 3).map(p => ({ id: p.id, to: '/financeiro', cor: '#1D8C84', titulo: `Parcela ${p.numero}/${p.total} · ${nomeM.get(p.mentorado_id) ?? 'mentorado'}`, sub: `Financeiro · venceu ${dataCurta(p.vencimento)} · ${dinheiro(p.valor)}` })),
+  ]
+
+  const data = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
+  const frase = [
+    atrasadas.length ? `${atrasadas.length} tarefa${atrasadas.length > 1 ? 's' : ''} atrasada${atrasadas.length > 1 ? 's' : ''}` : 'nenhuma tarefa atrasada',
+    emRisco.length ? `${emRisco.length} mentorado${emRisco.length > 1 ? 's' : ''} em risco` : 'nenhum mentorado em risco',
+  ].join(', ')
 
   return (
     <>
-      <Cabecalho titulo={`Início${perfil?.nome ? ' · ' + perfil.nome.split(' ')[0] : ''}`} frase={frase}
-        acoes={<Link to="/tarefas" className="btn-primario">Abrir quadro</Link>} />
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <span className="text-[13px] capitalize text-cinza">{data}</span>
+          <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em]">Visão geral{perfil?.nome ? `, ${perfil.nome.split(' ')[0]}` : ''}</h1>
+          <p className="text-[#4A4943]">Hoje: {frase}.</p>
+        </div>
+        <div className="flex gap-2">
+          <Link to="/mentorados" className="btn-secundario">Mentorados</Link>
+          <Link to="/tarefas" className="btn-primario">Abrir quadro</Link>
+        </div>
+      </header>
 
-      <section aria-labelledby="h-frentes" className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between">
-          <h2 id="h-frentes" className="text-[17px] font-bold">Frentes de atuação</h2>
-          <span className="text-[13px] text-cinza">{abertas.length} tarefas abertas · {atrasadas.length} atrasadas</span>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {frentes?.map(f => {
-            const daFrente = todas.filter(t => t.frente_id === f.id)
-            const ab = daFrente.filter(t => t.status !== 'concluida')
-            const at = ab.filter(estaAtrasada).length
-            const feitasMes = daFrente.filter(t => t.status === 'concluida' && t.concluida_em && t.concluida_em >= inicioMes).length
-            const pct = feitasMes + ab.length ? Math.round((feitasMes / (feitasMes + ab.length)) * 100) : 0
-            const prox = ab.filter(t => t.prazo).sort((a, b) => (a.prazo! < b.prazo! ? -1 : 1))[0]
-            const resp = f.responsavel_id ? mPerfis.get(f.responsavel_id) : undefined
-            return (
-              <Link key={f.id} to={`/tarefas?frente=${f.slug}`} className="cartao flex flex-col gap-3 p-4 hover:border-[#C9C6BD]">
-                <div className="flex items-center gap-2"><EtiquetaFrente nome={f.nome} cor={f.cor} /><span className="ml-auto text-xs text-cinza">{resp?.nome ?? 'sem responsável'}</span></div>
-                <div className="flex items-baseline gap-3">
-                  <span className="num text-[30px] font-semibold">{ab.length}</span><span className="text-cinza">abertas</span>
-                  {at ? <span className="rounded-full bg-ruim-fundo px-2 text-xs font-semibold text-ruim-texto">{at} atrasada{at > 1 ? 's' : ''}</span> : <span className="text-xs text-cinza">nada atrasado</span>}
-                </div>
-                <div className="flex flex-col gap-1.5"><div className="flex"><Barra pct={pct} cor={f.cor} /></div><span className="text-xs text-cinza">{feitasMes} concluídas no mês · {pct}%</span></div>
-                <span className="text-[13px]">{prox ? <>Próximo: {prox.titulo} · {textoPrazo(prox.prazo)}</> : <span className="text-cinza">Sem prazos marcados</span>}</span>
-              </Link>
-            )
-          })}
-        </div>
+      <section aria-label="Indicadores" className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-linha bg-linha lg:grid-cols-4">
+        <Kpi to="/tarefas" rotulo="Tarefas abertas" valor={abertas.length} detalhe={atrasadas.length ? `${atrasadas.length} atrasada${atrasadas.length > 1 ? 's' : ''}` : 'nenhuma atrasada'} tom={atrasadas.length ? 'ruim' : undefined} />
+        <Kpi to="/mentorados" rotulo="Mentorados ativos" valor={ativos.length} detalhe={emRisco.length ? `${emRisco.length} em risco` : 'nenhum em risco'} tom={emRisco.length ? 'ruim' : undefined} />
+        <Kpi to="/financeiro" rotulo="Parcelas do mês" valor={mesParcelas.length ? `${pagas.length}/${mesParcelas.length}` : '-'} detalhe={mesParcelas.length ? `${dinheiro(pagas.reduce((s, p) => s + (p.valor ?? 0), 0))} recebido` : 'nenhuma cadastrada'} tom={parcelasAtrasadas.length ? 'alerta' : undefined} />
+        <Kpi to="/leads" rotulo="Leads em aberto" valor={extra?.leads.length ?? 0} detalhe={`${extra?.leads.filter(l => l.etapa === 'novo').length ?? 0} novos aguardando contato`} />
       </section>
 
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[1.3fr_1fr_1fr]">
-        <Painel titulo="Para hoje e atrasadas" direita={<Link to="/tarefas" className="text-[13px] text-ouro-escuro">Ver quadro</Link>}>
-          {foco.length === 0 ? <Vazio>Nada vencendo hoje.</Vazio> : foco.map(t => {
-            const f = t.frente_id ? mFrentes.get(t.frente_id) : undefined
-            const r = t.responsavel_id ? mPerfis.get(t.responsavel_id) : undefined
-            return (
-              <div key={t.id} className="flex items-center gap-2.5 border-t border-[#F0EEE9] py-2.5">
-                <Ponto cor={f?.cor ?? '#C9C6BD'} /><span className="min-w-0 flex-1 truncate">{t.titulo}</span>
-                {r && <Avatar id={r.id} nome={r.nome} />}
-                <span className={`w-16 text-right text-xs ${estaAtrasada(t) ? 'font-semibold text-ruim-texto' : 'text-cinza'}`}>{textoPrazo(t.prazo)}</span>
-              </div>
-            )
-          })}
-        </Painel>
+      <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <section aria-labelledby="h-frentes" className="flex flex-col gap-3">
+          <div className="flex items-baseline justify-between"><h2 id="h-frentes" className="titulo-secao">Frentes de atuação</h2><span className="text-[13px] text-cinza">tarefas abertas e concluídas no mês</span></div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+            {frentes?.map(f => {
+              const daFrente = todas.filter(t => t.frente_id === f.id)
+              const ab = daFrente.filter(t => t.status !== 'concluida')
+              const at = ab.filter(estaAtrasada).length
+              const feitas = daFrente.filter(t => t.status === 'concluida' && t.concluida_em && t.concluida_em >= inicioMes).length
+              const pct = feitas + ab.length ? Math.round(feitas / (feitas + ab.length) * 100) : 0
+              const prox = ab.filter(t => t.prazo).sort((a, b) => (a.prazo! < b.prazo! ? -1 : 1))[0]
+              const resp = f.responsavel_id ? mPerfis.get(f.responsavel_id) : undefined
+              return (
+                <Link key={f.id} to={`/tarefas?frente=${f.slug}`} className="cartao cartao-hover flex flex-col gap-3 p-4">
+                  <div className="flex items-center gap-2"><EtiquetaFrente nome={f.nome} cor={f.cor} />
+                    {resp ? <span className="ml-auto"><Avatar id={resp.id} nome={resp.nome} tamanho={24} /></span> : <span className="ml-auto text-xs text-cinza">sem responsável</span>}</div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="num text-[28px] font-semibold leading-none">{ab.length}</span><span className="text-cinza">abertas</span>
+                    {at > 0 && <span className="ml-auto rounded-full bg-ruim-fundo px-2 py-0.5 text-xs font-semibold text-ruim-texto">{at} atrasada{at > 1 ? 's' : ''}</span>}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <div className="h-1.5 overflow-hidden rounded-full bg-[#EEECE6]"><div className="h-full rounded-full" style={{ width: `${pct}%`, background: f.cor }} /></div>
+                    <span className="text-xs text-cinza">{feitas} concluída{feitas === 1 ? '' : 's'} no mês · {pct}%</span>
+                  </div>
+                  <span className="truncate border-t border-[#F0EEE9] pt-2.5 text-[13px]">{prox ? <>{prox.titulo} <span className="text-cinza">· {textoPrazo(prox.prazo)}</span></> : <span className="text-cinza">Sem prazos marcados</span>}</span>
+                </Link>
+              )
+            })}
+          </div>
+        </section>
 
-        <Painel titulo="Agenda de hoje" direita={<span className="text-xs text-cinza">Google Agenda</span>}>
-          <Vazio>A ligação com o Google Agenda do Dr. Mário entra na próxima etapa.</Vazio>
-        </Painel>
-
-        <Painel titulo="Saúde da mentoria" direita={<Link to="/mentorados" className="text-[13px] text-ouro-escuro">Mentorados</Link>}>
-          {(extra?.mentorados.length ?? 0) === 0 ? <Vazio>Nenhum mentorado ativo.</Vazio> : (
-            <div className="flex flex-col gap-1"><span className="num text-[30px] font-semibold">{extra!.mentorados.length}</span><span className="text-cinza">mentorados ativos</span></div>
+        <Painel titulo="Precisa de atenção" acao={<span className="num text-[13px] text-cinza">{atencao.length}</span>}>
+          {atencao.length === 0 ? <Vazio>Nada pendente agora.</Vazio> : (
+            <div className="flex flex-col">
+              {atencao.map(a => (
+                <Link key={a.id} to={a.to} className="flex items-center gap-3 rounded-lg border-t border-[#F0EEE9] px-1 py-2.5 first:border-t-0 hover:bg-[#FBFAF7]">
+                  <Ponto cor={a.cor} />
+                  <span className="flex min-w-0 flex-1 flex-col"><span className="truncate font-medium">{a.titulo}</span><span className="truncate text-xs text-cinza">{a.sub}</span></span>
+                  <Icone nome="seta" tamanho={14} className="text-[#C9C6BD]" />
+                </Link>
+              ))}
+            </div>
           )}
         </Painel>
       </div>
 
-      <section aria-label="Resumo comercial e financeiro" className="cartao grid grid-cols-2 lg:grid-cols-4">
-        <Link to="/leads" className="flex flex-col gap-1 p-4"><span className="rotulo">Leads em aberto</span><span className="num text-2xl font-semibold">{extra?.leads.length ?? 0}</span><span className="text-xs text-cinza">{extra?.leads.filter(l => l.etapa === 'novo').length ?? 0} novos</span></Link>
-        <Link to="/financeiro" className="flex flex-col gap-1 border-l border-linha p-4"><span className="rotulo">Parcelas do mês</span><span className="num text-2xl font-semibold">{pagas} de {mesParcelas.length} pagas</span><span className={`text-xs ${parcelasAtrasadas ? 'text-ruim-texto' : 'text-cinza'}`}>{parcelasAtrasadas} atrasada{parcelasAtrasadas === 1 ? '' : 's'}</span></Link>
-        <Link to="/tarefas" className="flex flex-col gap-1 border-t border-linha p-4 lg:border-l lg:border-t-0"><span className="rotulo">Concluídas no mês</span><span className="num text-2xl font-semibold">{todas.filter(t => t.concluida_em && t.concluida_em >= inicioMes).length}</span><span className="text-xs text-cinza">todas as frentes</span></Link>
-        <Link to="/membros" className="flex flex-col gap-1 border-l border-t border-linha p-4 lg:border-t-0"><span className="rotulo">Área de membros</span><span className="text-2xl font-semibold">Cursos e alunos</span><span className="text-xs text-cinza">6 cursos, 70 aulas, 66 matrículas migradas</span></Link>
-      </section>
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 2xl:grid-cols-3">
+        <Painel titulo="Mentorados por etapa" acao={<Link to="/mentorados" className="text-[13px] text-ouro-escuro">Ver todos</Link>}>
+          {!mentoria ? <Carregando /> : (
+            <div className="flex flex-col gap-3">
+              {mentoria.etapas.map(e => {
+                const aqui = ativos.filter(r => r.etapa?.id === e.id)
+                const max = Math.max(1, ...mentoria.etapas.map(x => ativos.filter(r => r.etapa?.id === x.id).length))
+                return (
+                  <div key={e.id} className="flex items-center gap-3">
+                    <span className="w-[120px] shrink-0 truncate text-[13px]">{e.nome}</span>
+                    <div className="flex h-7 flex-1 items-center gap-[3px]">
+                      {aqui.map(r => <span key={r.m.id} title={r.m.nome} className="h-full rounded-[4px]" style={{ width: `${100 / max}%`, background: NIVEL[r.nivel].cor }} />)}
+                    </div>
+                    <span className="num w-5 text-right font-semibold">{aqui.length}</span>
+                  </div>
+                )
+              })}
+              <div className="flex flex-wrap gap-4 pt-1 text-xs text-cinza">
+                {(['ok', 'atencao', 'risco'] as const).map(n => <span key={n} className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: NIVEL[n].cor }} />{NIVEL[n].nome}</span>)}
+              </div>
+            </div>
+          )}
+        </Painel>
+
+        <Painel titulo="Tarefas concluídas por semana" acao={<span className="text-[13px] text-cinza">últimas 8 semanas</span>}>
+          <div className="flex gap-2">
+            <div className="flex h-[150px] flex-col justify-between pb-5 text-right text-[11px] text-cinza">
+              {[4, 3, 2, 1, 0].map(i => <span key={i} className="num leading-none">{passoY * i}</span>)}
+            </div>
+            <div className="relative flex flex-1 flex-col">
+              <div className="absolute inset-x-0 top-0 flex h-[130px] flex-col justify-between">{[0, 1, 2, 3, 4].map(i => <span key={i} className={`h-px ${i === 4 ? 'bg-[#D8D5CC]' : 'bg-[#F0EEE9]'}`} />)}</div>
+              <div className="relative flex h-[130px] items-end gap-2">
+                {porSemana.map((v, i) => (
+                  <div key={i} className="flex flex-1 flex-col items-center justify-end" title={`${v} concluídas`}>
+                    <span className="w-full rounded-t-[3px]" style={{ height: `${(v / topoY) * 130}px`, background: i === 7 ? '#9A7A30' : '#D8D5CC' }} />
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2 pt-1.5">{semanas.map((d, i) => <span key={i} className="num flex-1 text-center text-[11px] text-cinza">{i === 7 ? 'esta' : `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`}</span>)}</div>
+            </div>
+          </div>
+        </Painel>
+
+        <Painel titulo="Próximos prazos" acao={<Link to="/tarefas" className="text-[13px] text-ouro-escuro">Quadro</Link>} className="lg:col-span-2 2xl:col-span-1">
+          {(() => {
+            const prox = abertas.filter(t => t.prazo && diasAte(t.prazo) >= 0).sort((a, b) => (a.prazo! < b.prazo! ? -1 : 1)).slice(0, 6)
+            return prox.length === 0 ? <Vazio>Nenhum prazo marcado à frente.</Vazio> : prox.map(t => {
+              const f = t.frente_id ? mFrentes.get(t.frente_id) : undefined
+              const r = t.responsavel_id ? mPerfis.get(t.responsavel_id) : undefined
+              return (
+                <div key={t.id} className="flex items-center gap-3 border-t border-[#F0EEE9] py-2.5 first:border-t-0">
+                  <Ponto cor={f?.cor ?? '#C9C6BD'} />
+                  <span className="min-w-0 flex-1 truncate">{t.titulo}</span>
+                  {r && <Avatar id={r.id} nome={r.nome} tamanho={24} />}
+                  <span className="num w-16 text-right text-xs text-cinza">{textoPrazo(t.prazo)}</span>
+                </div>
+              )
+            })
+          })()}
+        </Painel>
+      </div>
     </>
   )
 }
