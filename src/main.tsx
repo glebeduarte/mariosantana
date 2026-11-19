@@ -20,6 +20,7 @@ import AreaAluno from './pages/AreaAluno'
 import VitrinePrevia from './pages/VitrinePrevia'
 import { Qualificacao, Diagnostico } from './pages/Publico'
 import DiagnosticoLeitura from './pages/DiagnosticoLeitura'
+import { Reunioes, Documentos } from './pages/Registros'
 import { Carregando } from './components/ui'
 
 const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false, retry: 1 } } })
@@ -50,8 +51,8 @@ function Portao() {
         <Route path="diagnosticos/:id" element={<DiagnosticoLeitura />} />
         <Route path="financeiro" element={<Financeiro />} />
         <Route path="agenda" element={<EmBreve secao="agenda" />} />
-        <Route path="reunioes" element={<EmBreve secao="reunioes" />} />
-        <Route path="documentos" element={<EmBreve secao="documentos" />} />
+        <Route path="reunioes" element={<Reunioes />} />
+        <Route path="documentos" element={<Documentos />} />
         <Route path="membros" element={<Membros />} />
         <Route path="membros/curso/:id" element={<CursoEditor />} />
         <Route path="equipe" element={<Equipe />} />
