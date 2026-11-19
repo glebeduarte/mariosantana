@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import type { EtapaLead, Lead } from '@/lib/tipos'
@@ -17,6 +18,11 @@ export default function Leads() {
       return data as Lead[]
     },
   })
+  const { data: diags } = useQuery({
+    queryKey: ['diagnosticos-lista'],
+    queryFn: async () => ((await supabase.from('diagnosticos').select('id,lead_id,nome,email,criado_em').order('criado_em', { ascending: false })).data ?? []) as { id: string; lead_id: string | null; nome: string | null; email: string | null; criado_em: string }[],
+  })
+  const diagDoLead = (l: Lead) => diags?.find(d => d.lead_id === l.id || (!!l.email && d.email?.toLowerCase() === l.email.toLowerCase()))
   const recarregar = () => { qc.invalidateQueries({ queryKey: ['leads'] }); qc.invalidateQueries({ queryKey: ['contagens-menu'] }) }
 
   async function mover(id: string, etapa: EtapaLead) { await supabase.from('leads').update({ etapa }).eq('id', id); recarregar() }
@@ -34,8 +40,11 @@ export default function Leads() {
 
   return (
     <>
-      <Cabecalho titulo="Leads" frase={`${leads.filter(l => !['fechado', 'perdido'].includes(l.etapa)).length} em aberto no funil da mentoria anual. O formulário de qualificação e o diagnóstico passam a cair aqui na próxima etapa.`}
-        acoes={<button className="btn-primario" onClick={() => setNovo(v => !v)}>Novo lead</button>} />
+      <Cabecalho titulo="Leads" frase={`${leads.filter(l => !['fechado', 'perdido'].includes(l.etapa)).length} em aberto no funil da mentoria anual. Qualificação e autodiagnóstico entram aqui sozinhos.`}
+        acoes={<>
+          <a className="btn-secundario" href="/qualificacao" target="_blank" rel="noreferrer">Abrir qualificação</a>
+          <a className="btn-secundario" href="/diagnostico" target="_blank" rel="noreferrer">Abrir diagnóstico</a>
+          <button className="btn-primario" onClick={() => setNovo(v => !v)}>Novo lead</button></>} />
       {novo && (
         <form onSubmit={criar} className="cartao grid grid-cols-1 gap-3 p-4 sm:grid-cols-3">
           {[['nome', 'Nome'], ['email', 'E-mail'], ['telefone', 'Telefone'], ['cidade', 'Cidade'], ['origem', 'Origem']].map(([n, r]) => (
@@ -58,6 +67,7 @@ export default function Leads() {
                     <span className="text-xs text-cinza">{[l.cidade, l.origem, dataCurta(l.criado_em)].filter(Boolean).join(' · ')}</span>
                     {l.qualificado === false ? <Pilula tom="ruim">Desqualificado{l.motivo_desqualificacao ? ` · ${l.motivo_desqualificacao}` : ''}</Pilula>
                       : l.pontuacao != null ? <Pilula tom="bom">Pontuação {l.pontuacao}</Pilula> : null}
+                    {(() => { const d = diagDoLead(l); return d ? <Link to={`/diagnosticos/${d.id}`} className="text-xs font-semibold text-ouro-escuro">Ver diagnóstico →</Link> : null })()}
                     <label className="sr-only" htmlFor={`le-${l.id}`}>Mover para</label>
                     <select id={`le-${l.id}`} className="mt-1 h-7 rounded-md border border-linha bg-bandeja px-1 text-xs text-cinza lg:hidden" value={l.etapa} onChange={e => mover(l.id, e.target.value as EtapaLead)}>
                       {ETAPAS_LEAD.map(x => <option key={x.id} value={x.id}>{x.nome}</option>)}
@@ -70,6 +80,16 @@ export default function Leads() {
           })}
         </div>
       </div>
+      {!!diags?.length && (
+        <section className="cartao flex flex-col">
+          <h2 className="px-5 pt-4 text-[15px] font-bold">Autodiagnósticos recebidos</h2>
+          {diags.map(d => (
+            <Link key={d.id} to={`/diagnosticos/${d.id}`} className="flex items-center gap-3 border-t border-linha px-5 py-3 hover:bg-[#FBFAF7]">
+              <b>{d.nome ?? 'Sem nome'}</b><span className="text-[13px] text-cinza">{d.email}</span><span className="ml-auto text-[13px] text-cinza">{dataCurta(d.criado_em)}</span>
+            </Link>
+          ))}
+        </section>
+      )}
     </>
   )
 }

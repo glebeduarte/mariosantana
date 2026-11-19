@@ -18,6 +18,8 @@ import CursoEditor from './pages/CursoEditor'
 import Equipe from './pages/Equipe'
 import AreaAluno from './pages/AreaAluno'
 import VitrinePrevia from './pages/VitrinePrevia'
+import { Qualificacao, Diagnostico } from './pages/Publico'
+import DiagnosticoLeitura from './pages/DiagnosticoLeitura'
 import { Carregando } from './components/ui'
 
 const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false, retry: 1 } } })
@@ -45,6 +47,7 @@ function Portao() {
         <Route path="mentorados" element={<Mentorados />} />
         <Route path="mentorados/:id" element={<Jornada />} />
         <Route path="leads" element={<Leads />} />
+        <Route path="diagnosticos/:id" element={<DiagnosticoLeitura />} />
         <Route path="financeiro" element={<Financeiro />} />
         <Route path="agenda" element={<EmBreve secao="agenda" />} />
         <Route path="reunioes" element={<EmBreve secao="reunioes" />} />
@@ -63,7 +66,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={qc}>
       <BrowserRouter>
-        <AuthProvider><Portao /></AuthProvider>
+        <Routes>
+          <Route path="/qualificacao" element={<Qualificacao />} />
+          <Route path="/diagnostico" element={<Diagnostico />} />
+          <Route path="/*" element={<AuthProvider><Portao /></AuthProvider>} />
+        </Routes>
       </BrowserRouter>
     </QueryClientProvider>
   </React.StrictMode>,
