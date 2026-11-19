@@ -39,11 +39,12 @@ export default function Jornada() {
         supabase.from('observacoes').select('*').eq('mentorado_id', id!).order('criado_em', { ascending: false }),
         supabase.from('parcelas').select('*').eq('mentorado_id', id!).order('numero'),
       ])
+      const dg = await supabase.from('diagnosticos').select('id').eq('mentorado_id', id!).order('criado_em', { ascending: false }).limit(1).maybeSingle()
       if (m.error) throw m.error
       return {
         m: m.data as Mentorado, itens: (itens.data ?? []) as EtapaItem[], prog: new Set((prog.data ?? []).map(x => x.item_id as string)),
         oi: (oi.data ?? []) as OnboardingItem[], onb: new Set((onb.data ?? []).map(x => x.item_id as string)),
-        sessoes: (s.data ?? []) as Sessao[], obs: (o.data ?? []) as Observacao[], parcelas: (p.data ?? []) as Parcela[],
+        sessoes: (s.data ?? []) as Sessao[], obs: (o.data ?? []) as Observacao[], parcelas: (p.data ?? []) as Parcela[], diagId: dg.data?.id as string | undefined,
       }
     },
   })
@@ -95,7 +96,8 @@ export default function Jornada() {
 
   return (
     <>
-      <Link to="/mentorados" className="text-[13px] text-ouro-escuro">Mentorados / {m.nome}</Link>
+      <div className="flex items-center gap-4"><Link to="/mentorados" className="text-[13px] text-ouro-escuro">Mentorados / {m.nome}</Link>
+        {data.diagId && <Link to={`/diagnosticos/${data.diagId}`} className="ml-auto text-[13px] font-semibold text-ouro-escuro">Ver autodiagnóstico →</Link>}</div>
       <header className="flex flex-wrap items-center gap-4">
         <Avatar id={m.id} nome={m.nome} tamanho={52} />
         <div className="flex min-w-[260px] flex-1 flex-col gap-1">
